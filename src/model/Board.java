@@ -1,6 +1,8 @@
 package model;
 
-public class Board {
+import java.util.Observable;
+
+public class Board extends Observable {
     public final int LENGTH = 7;
     public final int HEIGHT = 6;
     private Slot[][] board;
@@ -12,6 +14,14 @@ public class Board {
                 this.board[row][col] = new Slot(row, col, null);
             }
         }
+    }
+
+    public int getLength() {
+        return LENGTH;
+    }
+
+    public int getHeight() {
+        return HEIGHT;
     }
 
     @Override
