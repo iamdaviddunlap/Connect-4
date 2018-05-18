@@ -82,6 +82,7 @@ public class PlayerGUI extends Application implements Observer {
         Scene myScene = new Scene(gp);
         mainStage.setScene(myScene);
         mainStage.show();
+        //TODO DELETE THIS COMMENT (testing GitHub accounts)
     }
 
     @Override
