@@ -22,7 +22,10 @@ public class ConnectFourGame {
                 } else if (makeMove(this.playerTwo, this.playerOne)) {
                     keepGoing = false;
                 }
-            } catch(Exception e) {e.printStackTrace();}
+            } catch(Exception e) {
+                e.printStackTrace();
+                keepGoing = false;
+            }
         }
     }
 
