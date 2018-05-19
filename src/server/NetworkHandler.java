@@ -32,7 +32,10 @@ public class NetworkHandler {
 
             Thread netThread = new Thread( () -> this.run() );
             netThread.start();
-        } catch(IOException e) {e.printStackTrace();}
+        } catch(IOException e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
     }
 
     private synchronized boolean canGo() {
