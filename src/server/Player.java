@@ -3,10 +3,11 @@ package server;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Scanner;
 
-public class Player implements Closeable {
+public class Player implements Closeable, ServerProtocol {
     private Socket sock; //to communicate with client
     private Scanner scanner; //to read responses from the client
     private PrintStream printer; //to send requests to the client
@@ -20,6 +21,26 @@ public class Player implements Closeable {
         catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+
+    public int makeMove() throws Exception {
+        this.printer.println(MAKE_MOVE);
+        String response = scanner.nextLine();
+        int col = -1;
+        if(response.startsWith(MOVE_MADE)) {
+            try {
+                col = Integer.parseInt(response.split(" ")[1]);
+            } catch(Exception e) {throw new Exception("Invalid player response.");}
+        }
+        else {
+            throw new Exception("Invalid player response.");
+        }
+        return col;
+    }
+
+    public void moveMade(int col) {
+        this.printer.println(MOVE_MADE+" "+col);
     }
 
     /**

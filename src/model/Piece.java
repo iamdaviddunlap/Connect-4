@@ -8,6 +8,10 @@ public class Piece {
         this.pieceColor = color;
     }
 
+    public Color getColor() {
+        return pieceColor;
+    }
+
     @Override
     public String toString() {
         if(pieceColor == Color.RED) {
