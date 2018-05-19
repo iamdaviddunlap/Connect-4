@@ -43,6 +43,18 @@ public class Player implements Closeable, ServerProtocol {
         this.printer.println(MOVE_MADE+" "+col);
     }
 
+    public void gameWon() {
+        this.printer.println(GAME_WON);
+    }
+
+    public void gameLost() {
+        this.printer.println(GAME_LOST);
+    }
+
+    public void gameTied() {
+        this.printer.println(GAME_TIED);
+    }
+
     /**
      * Called to close the client connection after the game is over.
      */

@@ -21,14 +21,17 @@ import java.io.PrintStream;
 import java.net.Socket;
 import java.util.*;
 
+import static server.ServerProtocol.*;
+
 public class PlayerGUI extends Application implements Observer {
     private static Board model;
     private static List<String> params = null;
     private static ImageView[] topRow = new ImageView[7];
     private static ImageView[][] gameBoard = new ImageView[7][6];
     private static boolean isTurn;
+    private static boolean error;
     private static String turnMsg;
-    private static Label turn = new Label();
+    private static Label message = new Label();
     private static NetworkHandler serverCommunicator;
 
     private Image tile_empty_img = new Image(getClass().getResourceAsStream("resources/tile_empty.png"));
@@ -40,7 +43,10 @@ public class PlayerGUI extends Application implements Observer {
 
     private static final String IS_TURN_MSG = "It's your turn. Click to drop your piece.";
     private static final String NOT_TURN_MSG = "It's not your turn. Waiting for opponent.";
-    private static final String NO_CONNECTION_MSG = "Waiting for your opponent to connect.";
+    private static final String ERROR_MSG = "That is not a valid move. Try again.";
+    private static final String WON_MSG = "You won! Click this message to quit.";
+    private static final String LOST_MSG = "You lost :( Click this message to quit.";
+    private static final String TIED_MSG = "It was a tie game! Click this message to quit.";
 
     @Override
     public void update(Observable o, Object arg) {
@@ -51,24 +57,40 @@ public class PlayerGUI extends Application implements Observer {
     }
 
     public void refresh() {
-        System.out.println("refresh");
         isTurn = model.isMyTurn();
-        if(isTurn) {
-            turn.setText(IS_TURN_MSG);
+        if(error) {
+            message.setText(ERROR_MSG);
+            return;
+        }
+        else if(isTurn) {
+            message.setText(IS_TURN_MSG);
         }
         else {
-            turn.setText(NOT_TURN_MSG);
+            message.setText(NOT_TURN_MSG);
         }
 
         for(int i=0;i<topRow.length;i++) {
             topRow[i].setImage(bg_img);
         }
 
-        System.out.println(this.model);
+        if(this.model.getGameDecision() != null) {
+            isTurn = false;
+            switch(this.model.getGameDecision()) {
+                case GAME_WON:
+                    message.setText(WON_MSG);
+                    break;
+                case GAME_LOST:
+                    message.setText(LOST_MSG);
+                    break;
+                case GAME_TIED:
+                    message.setText(TIED_MSG);
+                    break;
+            }
+        }
+
         for(int i=0;i<model.getLength();i++) {
             for(int j=0;j<model.getHeight();j++) {
                 Piece piece = this.model.getSlot(i,j).getPiece();
-                System.out.println(piece);
                 if(piece == null) {
                     gameBoard[i][j].setImage(tile_empty_img);
                 }
@@ -124,13 +146,24 @@ public class PlayerGUI extends Application implements Observer {
 
                 back.setOnMouseClicked(event -> {
                     if(isTurn) {
-                        System.out.println("clicked");
-                        this.serverCommunicator.sendMove(col);
+                        if(this.serverCommunicator.makeMove(col)) {
+                            error = false;
+                        }
+                        else {
+                            error = true;
+                        }
+                        refresh();
                     }
                 });
                 slot.setOnMouseClicked(event -> {
                     if(isTurn) {
-                        this.serverCommunicator.sendMove(col);
+                        if(this.serverCommunicator.makeMove(col)) {
+                            error = false;
+                        }
+                        else {
+                            error = true;
+                        }
+                        refresh();
                     }
                 });
 
@@ -144,8 +177,14 @@ public class PlayerGUI extends Application implements Observer {
                 }
             }
         }
-        turn.setText(NOT_TURN_MSG);
-        VBox vb = new VBox(turn, gp);
+        message.setText(NOT_TURN_MSG);
+        message.setOnMouseClicked(event -> {
+            if(this.model.getGameDecision() != null) {
+                System.exit(0);
+            }
+        });
+
+        VBox vb = new VBox(message, gp);
         Scene myScene = new Scene(vb);
         mainStage.setScene(myScene);
         mainStage.show();

@@ -34,6 +34,23 @@ public class ConnectFourGame {
         active.moveMade(col);
         other.moveMade(col);
 
+        switch(this.gameBoard.checkWin()) {
+            case 'Y': //Yellow won
+                playerOne.gameWon();
+                playerTwo.gameLost();
+                break;
+            case 'R': //Red won
+                playerOne.gameLost();
+                playerTwo.gameWon();
+                break;
+            case 'T': //There was a tie
+                playerOne.gameTied();
+                playerTwo.gameTied();
+                break;
+            case ' ': //Nobody won this turn
+                break;
+        }
+
         return false; //returns whether game has ended, TODO finish this
     }
 }

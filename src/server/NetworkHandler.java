@@ -24,6 +24,7 @@ public class NetworkHandler {
     public NetworkHandler( String hostname, int port, Board model ) {
         try {
             this.sock = new Socket( hostname, port );
+            System.out.println("Connected to server on port "+port);
             this.networkIn = new Scanner( sock.getInputStream() );
             this.networkOut = new PrintStream( sock.getOutputStream() );
             this.board = model;
@@ -42,22 +43,35 @@ public class NetworkHandler {
         while(this.canGo()) {
             String request = this.networkIn.next();
             String arguments = this.networkIn.nextLine().trim();
-            System.out.println( "Net message in = \"" + request + '"' );
             switch(request) {
                 case MAKE_MOVE:
-                    System.out.println("network recognized MAKE_MOVE");
                     this.board.canMakeMove();
                     break;
                 case MOVE_MADE:
-                    System.out.println("network recognized "+request+" "+arguments);
                     this.board.makeMove(Integer.parseInt(arguments));
+                    break;
+                case GAME_WON:
+                    this.board.setGameDecision(GAME_WON);
+                    break;
+                case GAME_LOST:
+                    this.board.setGameDecision(GAME_LOST);
+                    break;
+                case GAME_TIED:
+                    this.board.setGameDecision(GAME_TIED);
                     break;
             }
         }
     }
 
+    public boolean makeMove(int col) {
+        if(this.board.checkTurn(col)) {
+            sendMove(col);
+            return true;
+        }
+        return false;
+    }
+
     public void sendMove(int col) {
-        System.out.println("Column: "+col);
         this.networkOut.println(MOVE_MADE+" "+col);
     }
 }
