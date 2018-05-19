@@ -116,6 +116,8 @@ public class Board extends Observable {
                     yCounter = 0;
                 }
             }
+            if(rCounter > rGreatest) { rGreatest = rCounter; }
+            if(yCounter > yGreatest) { yGreatest = yCounter; }
             if(yGreatest >= 4) {
                 return 'Y';
             }
@@ -157,6 +159,8 @@ public class Board extends Observable {
                     yCounter = 0;
                 }
             }
+            if(rCounter > rGreatest) { rGreatest = rCounter; }
+            if(yCounter > yGreatest) { yGreatest = yCounter; }
             if(yGreatest >= 4) {
                 return 'Y';
             }
@@ -174,7 +178,6 @@ public class Board extends Observable {
     private char checkWinDiagonal() {
         for (int col=0; col < HEIGHT/2; col++) {
             for (int row = 0; row < LENGTH; row++) {
-                //System.out.println("Row: "+row+" Col: "+col+" Board: "+board[row][col]);
                 char check = checkDiagonalCoords(row,col);
                 if(check != ' ') {
                     return check;

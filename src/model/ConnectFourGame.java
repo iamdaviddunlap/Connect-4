@@ -23,7 +23,7 @@ public class ConnectFourGame {
                     keepGoing = false;
                 }
             } catch(Exception e) {
-                e.printStackTrace();
+                System.out.println("A player has disconnected. Aborting.");
                 keepGoing = false;
             }
         }

@@ -3,6 +3,8 @@ package view;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.event.EventHandler;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -10,8 +12,9 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseDragEvent;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
 import javafx.stage.Stage;
 import model.Board;
 import model.Piece;
@@ -178,6 +181,7 @@ public class PlayerGUI extends Application implements Observer {
             }
         }
         message.setText(NOT_TURN_MSG);
+        message.setFont(Font.font(18));
         message.setOnMouseClicked(event -> {
             if(this.model.getGameDecision() != null) {
                 System.exit(0);
@@ -186,7 +190,9 @@ public class PlayerGUI extends Application implements Observer {
 
         VBox vb = new VBox(message, gp);
         Scene myScene = new Scene(vb);
+        vb.setBackground(new Background(new BackgroundFill(Color.web("#0DDEFF"), CornerRadii.EMPTY, Insets.EMPTY)));
         mainStage.setScene(myScene);
+        mainStage.setOnCloseRequest(event -> {System.exit(1);});
         mainStage.show();
     }
 
