@@ -140,13 +140,13 @@ public class PlayerGUI extends Application implements Observer {
 
                 back.setOnMouseClicked(event -> {
                     if(isTurn) {
-                        error = this.serverCommunicator.makeMove(col);
+                        error = !this.serverCommunicator.makeMove(col);
                         refresh();
                     }
                 });
                 slot.setOnMouseClicked(event -> {
                     if(isTurn) {
-                        error = this.serverCommunicator.makeMove(col);
+                        error = !this.serverCommunicator.makeMove(col);
                         refresh();
                     }
                 });
