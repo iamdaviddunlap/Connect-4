@@ -12,8 +12,6 @@ import static server.ServerProtocol.*;
 
 public class NetworkHandler {
 
-    private Socket sock; //communicate with server
-
     private Scanner networkIn; //read requests from server
 
     private PrintStream networkOut; //write responses to server
@@ -24,7 +22,7 @@ public class NetworkHandler {
 
     public NetworkHandler( String hostname, int port, Board model ) {
         try {
-            this.sock = new Socket( hostname, port );
+            Socket sock = new Socket( hostname, port ); //communicate with server
             System.out.println("Connected to server on port "+port);
             this.networkIn = new Scanner( sock.getInputStream() );
             this.networkOut = new PrintStream( sock.getOutputStream() );
@@ -80,7 +78,7 @@ public class NetworkHandler {
         return false;
     }
 
-    public void sendMove(int col) {
+    private void sendMove(int col) {
         this.networkOut.println(MOVE_MADE+" "+col);
     }
 }

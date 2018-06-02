@@ -3,8 +3,8 @@ package model;
 import java.util.Observable;
 
 public class Board extends Observable {
-    public final int LENGTH = 7;
-    public final int HEIGHT = 6;
+    private final int LENGTH = 7;
+    private final int HEIGHT = 6;
     private Slot[][] board;
     private boolean myTurn;
     private Piece.Color activeColor;

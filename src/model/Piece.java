@@ -1,7 +1,7 @@
 package model;
 
 public class Piece {
-    public enum Color {RED, YELLOW};
+    public enum Color {RED, YELLOW}
     private Color pieceColor;
 
     Piece(Color color) {

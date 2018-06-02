@@ -2,15 +2,11 @@ package view;
 
 import javafx.application.Application;
 import javafx.application.Platform;
-import javafx.event.EventHandler;
 import javafx.geometry.Insets;
-import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.MouseDragEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
@@ -19,23 +15,18 @@ import javafx.stage.Stage;
 import model.Board;
 import model.Piece;
 import server.NetworkHandler;
-
-import java.io.PrintStream;
-import java.net.Socket;
 import java.util.*;
 
 import static server.ServerProtocol.*;
 
 public class PlayerGUI extends Application implements Observer {
-    private static Board model;
-    private static List<String> params = null;
+    private Board model;
+    private NetworkHandler serverCommunicator;
     private static ImageView[] topRow = new ImageView[7];
     private static ImageView[][] gameBoard = new ImageView[7][6];
     private static boolean isTurn;
     private static boolean error;
-    private static String turnMsg;
     private static Label message = new Label();
-    private static NetworkHandler serverCommunicator;
 
     private Image tile_empty_img = new Image(getClass().getResourceAsStream("resources/tile_empty.png"));
     private Image tile_yellow_img = new Image(getClass().getResourceAsStream("resources/tile_yellow.png"));
@@ -59,7 +50,7 @@ public class PlayerGUI extends Application implements Observer {
         });
     }
 
-    public void refresh() {
+    private void refresh() {
         isTurn = model.isMyTurn();
         if(error) {
             message.setText(ERROR_MSG);
@@ -72,8 +63,8 @@ public class PlayerGUI extends Application implements Observer {
             message.setText(NOT_TURN_MSG);
         }
 
-        for(int i=0;i<topRow.length;i++) {
-            topRow[i].setImage(bg_img);
+        for(ImageView slot: topRow) {
+            slot.setImage(bg_img);
         }
 
         if(this.model.getGameDecision() != null) {
@@ -149,23 +140,13 @@ public class PlayerGUI extends Application implements Observer {
 
                 back.setOnMouseClicked(event -> {
                     if(isTurn) {
-                        if(this.serverCommunicator.makeMove(col)) {
-                            error = false;
-                        }
-                        else {
-                            error = true;
-                        }
+                        error = this.serverCommunicator.makeMove(col);
                         refresh();
                     }
                 });
                 slot.setOnMouseClicked(event -> {
                     if(isTurn) {
-                        if(this.serverCommunicator.makeMove(col)) {
-                            error = false;
-                        }
-                        else {
-                            error = true;
-                        }
+                        error = this.serverCommunicator.makeMove(col);
                         refresh();
                     }
                 });
@@ -197,11 +178,11 @@ public class PlayerGUI extends Application implements Observer {
     }
 
     @Override
-    public void init() throws Exception {
+    public void init() {
         this.model = new Board();
         this.model.addObserver( this );
 
-        params = super.getParameters().getRaw();
+        List<String> params = super.getParameters().getRaw();
         if (params.size() != 2) {
             System.err.println(
                     "Usage: java EchoClient <host name> <port number>");

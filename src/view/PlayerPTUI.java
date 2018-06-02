@@ -32,7 +32,7 @@ public class PlayerPTUI {
                                 new InputStreamReader(echoSocket.getInputStream()));
                 BufferedReader stdIn =
                         new BufferedReader(
-                                new InputStreamReader(System.in));
+                                new InputStreamReader(System.in))
         ) {
             String userInput;
             while ((userInput = stdIn.readLine()) != null) {

@@ -1,6 +1,5 @@
 package server;
 
-import model.Board;
 import model.ConnectFourGame;
 
 import java.io.Closeable;

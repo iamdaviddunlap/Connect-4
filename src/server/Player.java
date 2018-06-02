@@ -3,7 +3,6 @@ package server;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Scanner;
 
@@ -27,7 +26,7 @@ public class Player implements Closeable, ServerProtocol {
     public int makeMove() throws Exception {
         this.printer.println(MAKE_MOVE);
         String response = scanner.nextLine();
-        int col = -1;
+        int col;
         if(response.startsWith(MOVE_MADE)) {
             try {
                 col = Integer.parseInt(response.split(" ")[1]);
