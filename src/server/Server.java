@@ -1,5 +1,6 @@
 package server;
 
+import ai.AiClient;
 import model.ConnectFourGame;
 
 import java.io.Closeable;
@@ -36,12 +37,13 @@ public class Server implements Closeable {
      * @param args the args for the server
      */
     public static void main(String[] args) {
-        if (args.length != 1) {
-            System.err.println("Usage: java EchoServer <port number>");
+        if (args.length != 2) {
+            System.err.println("Usage: <port number> <game mode>");
             System.exit(1);
         }
         try {
-            ServerSocket server = new ServerSocket(Integer.parseInt(args[0]));
+            int portNumber = Integer.parseInt(args[0]);
+            ServerSocket server = new ServerSocket(portNumber);
             System.out.print("hosting on: ");
             String total = InetAddress.getLocalHost().toString();
             String remove = InetAddress.getLocalHost().getHostName()+"/";
@@ -53,6 +55,12 @@ public class Server implements Closeable {
             System.out.println("Player one connected!");
 
             System.out.println("Waiting for player two...");
+
+            if(Integer.parseInt(args[1]) == 1) { //creates AI player
+                AiClient ai = new AiClient(portNumber);
+                ai.start();
+            }
+
             Socket playerTwoSocket = server.accept();
             Player playerTwo = new Player(playerTwoSocket);
             System.out.println("Player two connected!");

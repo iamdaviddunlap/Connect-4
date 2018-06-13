@@ -3,12 +3,13 @@ package model;
 import java.util.Observable;
 
 public class Board extends Observable {
-    private final int LENGTH = 7;
-    private final int HEIGHT = 6;
+    public static final int LENGTH = 7; //TODO change back to 7
+    public static final int HEIGHT = 6; //TODO chnage back to 6
     private Slot[][] board;
     private boolean myTurn;
     private Piece.Color activeColor;
     private String gameDecision = null;
+    private String movesString;
 
     public Board() {
         this.board = new Slot[LENGTH][HEIGHT];
@@ -19,6 +20,7 @@ public class Board extends Observable {
         }
         this.myTurn = false;
         activeColor = Piece.Color.YELLOW;
+        this.movesString = "";
     }
 
     public Piece.Color getActiveColor() {
@@ -77,6 +79,7 @@ public class Board extends Observable {
         board[col][getLowest(col)].setPiece(new Piece(activeColor));
         switchActiveColor();
         myTurn = false;
+        movesString += (col+1);
         super.setChanged();
         super.notifyObservers();
     }
@@ -214,6 +217,7 @@ public class Board extends Observable {
             if (count == 3) {
                 return returnVal;
             } else {
+                count = 0;
                 //Down, left
                 try {
                     for (int i = 1; i <= 3; i++) {
@@ -230,6 +234,7 @@ public class Board extends Observable {
                 if (count == 3) {
                     return returnVal;
                 } else {
+                    count = 0;
                     //Up, right
                     try {
                         for (int i = 1; i <= 3; i++) {
@@ -246,6 +251,7 @@ public class Board extends Observable {
                     if (count == 3) {
                         return returnVal;
                     } else {
+                        count = 0;
                         //Up, left
                         try {
                             for (int i = 1; i <= 3; i++) {
@@ -307,6 +313,23 @@ public class Board extends Observable {
                 }
             }
         }
+    }
+
+    public int totalPieces(Piece.Color color) {
+        int count = 0;
+        for (int col=0; col<HEIGHT; col++) {
+            for (int row=0; row<LENGTH; row++) {
+                if(board[row][col].getPiece() != null &&
+                   board[row][col].getPiece().getColor().equals(color)) {
+                    count++;
+                }
+            }
+        }
+        return count;
+    }
+
+    public String getMovesString() {
+        return movesString;
     }
 
     @Override
