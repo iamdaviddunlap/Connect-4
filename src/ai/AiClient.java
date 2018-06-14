@@ -23,6 +23,11 @@ public class AiClient extends Thread{
         this.portNumber = portNumber;
     }
 
+    private void makeMove() {
+        int move = solver.bestMove(model);
+        this.model.makeMove(move);
+        this.networkOut.println(MOVE_MADE+" "+move);
+    }
 
     @Override
     public void run() {
@@ -39,6 +44,7 @@ public class AiClient extends Thread{
                 switch (request) {
                     case MAKE_MOVE:
                         this.model.canMakeMove();
+                        this.makeMove();
                         break;
                     case MOVE_MADE:
                         this.model.makeMove(Integer.parseInt(arguments));

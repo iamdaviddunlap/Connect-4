@@ -12,6 +12,15 @@ public class Piece {
         return pieceColor;
     }
 
+    public static char colorToChar(Color color) {
+        if(color.equals(Color.YELLOW)) {
+            return 'Y';
+        }
+        else {
+            return 'R';
+        }
+    }
+
     @Override
     public String toString() {
         if(pieceColor == Color.RED) {

@@ -1,6 +1,7 @@
 package ai;
 
 import model.Board;
+import model.Piece;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -11,6 +12,8 @@ import java.util.ArrayList;
 import static model.Board.*;
 
 public class Solver {
+
+    private static int negamaxCount = 0;
 
     /**
      * Uses the passed in string to simulate moves on a game board
@@ -33,33 +36,52 @@ public class Solver {
      * @param board the board who's position is being checked
      * @return char ' ' if not terminal, 'Y' if yellow wins, and 'R' if red wins
      */
-    private static boolean isTerminal(Board board) {
-        boolean terminal = false;
+    private static char isTerminal(Board board) {
+        char initial = board.checkWin();
+        if(initial != ' ') {
+            board.switchActiveColor();
+            return initial;
+        }
         for(int i=0;i<LENGTH;i++) {
             if(board.checkTurn(i)) {
                 Board boardCp = new Board();
                 if(!populateBoard(boardCp,board.getMovesString())) {
-                    return true;
+                    return boardCp.checkWin();
                 }
                 boardCp.makeMove(i);
-                if(terminal == false && boardCp.checkWin() != ' ') {
-                    terminal = true;
+                if(boardCp.checkWin() != ' ') {
+                    return boardCp.checkWin();
                 }
             }
         }
-        return terminal;
+        return initial;
     }
 
     private static int negamax(Board board,int move) { //TODO complete
+        negamaxCount++;
+        //System.out.println("count: "+negamaxCount);
         board.makeMove(move);
-        if(isTerminal(board)) {
-            return 22-(board.totalPieces(board.getActiveColor())+1);
+        char term = isTerminal(board);
+        if(term != ' ') {
+            if(term == 'T') {
+                return 0;
+            }
+            else {
+                if(board.checkWin() == Piece.colorToChar(board.getActiveColor())) {
+                    return (board.totalPieces(board.getActiveColor()))-22;
+                }
+                else {
+                    return 22-(board.totalPieces(board.getActiveColor()) + 1);
+                }
+            }
         }
         else {
             int localMax = Integer.MIN_VALUE;
             for(int i=0;i<LENGTH;i++) {
                 if(board.checkTurn(i)) {
-                    int current = -negamax(board,i);
+                    Board boardCp = new Board();
+                    populateBoard(boardCp,board.getMovesString());
+                    int current = -negamax(boardCp,i);
                     if(current > localMax) {
                         localMax = current;
                     }
@@ -76,47 +98,49 @@ public class Solver {
         ArrayList<String> outputs = new ArrayList<>();
 
         while((line = buff.readLine()) != null) {
-            String[] temp = line.split(" ");
-            moves.add(temp[0]);
-            outputs.add(temp[1]);
+            if(line.charAt(0) != '/' && line.charAt(1) != '/') {
+                String[] temp = line.split(" ");
+                moves.add(temp[0]);
+                outputs.add(temp[1]);
+            }
         }
         return new ArrayList[]{moves,outputs};
     }
 
-    public static int bestMove(Board board) {
+    public int bestMove(Board board) {
         int max = Integer.MIN_VALUE;
+        int move = -1;
         for(int i=0;i<LENGTH;i++) {
             if(board.checkTurn(i)) {
-                int current = negamax(board, i);
+                Board boardCp = new Board();
+                populateBoard(boardCp,board.getMovesString());
+                int current = negamax(boardCp, i);
                 if (current > max) {
                     max = current;
+                    move = i;
                 }
             }
         }
-        return max;
+        return move;
     }
 
     public static void main(String args[]) throws IOException {
-        Board board = new Board();
-        populateBoard(board,"225257625346224411156336534367135144");
-        System.out.println(board);
-        System.out.println("active color: "+board.getActiveColor());
-        System.out.println("board string: "+board.getMovesString());
-        System.out.println("score: "+negamax(board,0));
-
-        ArrayList<String>[] values = readFile("src/ai/test1.txt");
+        ArrayList<String>[] values = readFile("src/ai/"+args[0]);
         for(int i=0;i<values[0].size();i++) {
             Board tempBoard = new Board();
             int move = Integer.parseInt(""+values[0].get(i).charAt(values[0].get(i).length()-1))-1;
             String str = values[0].get(i).substring(0, values[0].get(i).length() - 1);
             populateBoard(tempBoard,str);
-            if(negamax(tempBoard,move) == Integer.parseInt(values[1].get(i))) {
+            int score = negamax(tempBoard,move);
+            if(score == Integer.parseInt(values[1].get(i))) {
                 System.out.println("Match!");
             }
             else {
-                System.out.println("Oops. Looking for: "+Integer.parseInt(values[1].get(i))+" but found: "+move+
+                System.out.println("Oops. Looking for: "+Integer.parseInt(values[1].get(i))+" but found: "+score+
                 " movesString: "+values[0].get(i));
             }
+            System.out.println("final count: "+negamaxCount+"\n");
+            negamaxCount = 0;
         }
     }
 

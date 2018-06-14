@@ -19,7 +19,7 @@ public class Board extends Observable {
             }
         }
         this.myTurn = false;
-        activeColor = Piece.Color.YELLOW;
+        activeColor = Piece.Color.RED;
         this.movesString = "";
     }
 
@@ -37,7 +37,7 @@ public class Board extends Observable {
         super.notifyObservers();
     }
 
-    private void switchActiveColor() {
+    public void switchActiveColor() {
         if(activeColor == Piece.Color.YELLOW) {
             activeColor = Piece.Color.RED;
         }
