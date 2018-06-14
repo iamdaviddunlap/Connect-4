@@ -58,9 +58,8 @@ public class Solver {
         return initial;
     }
 
-    private static int negamax(Board board,int move) { //TODO complete
-        negamaxCount++;
-        //System.out.println("count: "+negamaxCount);
+    private static int negamax(Board board,int move,int alpha, int beta) { //TODO complete
+        negamaxCount++; //keeps track of how many nodes are explored
         board.makeMove(move);
         char term = isTerminal(board);
         if(term != ' ') {
@@ -82,9 +81,18 @@ public class Solver {
                 if(board.checkTurn(i)) {
                     Board boardCp = new Board();
                     populateBoard(boardCp,board.getMovesString());
-                    int current = -negamax(boardCp,i);
+                    int current = -negamax(boardCp,i,-beta,-alpha);
                     if(current > localMax) {
                         localMax = current;
+                    }
+                    if(current >= beta) {
+                        return current;
+                    }
+                    if(current > alpha) {
+                        alpha = current;
+                    }
+                    if(alpha >= beta) {
+                        return beta;
                     }
                 }
             }
@@ -115,7 +123,7 @@ public class Solver {
             if(board.checkTurn(i)) {
                 Board boardCp = new Board();
                 populateBoard(boardCp,board.getMovesString());
-                int current = negamax(boardCp, i);
+                int current = negamax(boardCp, i,-Integer.MAX_VALUE,Integer.MAX_VALUE);
                 if (current > max) {
                     max = current;
                     move = i;
@@ -133,7 +141,7 @@ public class Solver {
             String str = values[0].get(i).substring(0, values[0].get(i).length() - 1);
             populateBoard(tempBoard,str);
             startTime = System.nanoTime();
-            int score = negamax(tempBoard,move);
+            int score = negamax(tempBoard,move,-Integer.MAX_VALUE,Integer.MAX_VALUE);
             if(score == Integer.parseInt(values[1].get(i))) {
                 System.out.println("Match!");
             }
@@ -146,5 +154,4 @@ public class Solver {
             negamaxCount = 0;
         }
     }
-
 }
