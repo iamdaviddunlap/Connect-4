@@ -14,6 +14,7 @@ import static model.Board.*;
 public class Solver {
 
     private static int negamaxCount = 0;
+    private static long startTime;
 
     /**
      * Uses the passed in string to simulate moves on a game board
@@ -131,6 +132,7 @@ public class Solver {
             int move = Integer.parseInt(""+values[0].get(i).charAt(values[0].get(i).length()-1))-1;
             String str = values[0].get(i).substring(0, values[0].get(i).length() - 1);
             populateBoard(tempBoard,str);
+            startTime = System.nanoTime();
             int score = negamax(tempBoard,move);
             if(score == Integer.parseInt(values[1].get(i))) {
                 System.out.println("Match!");
@@ -139,7 +141,8 @@ public class Solver {
                 System.out.println("Oops. Looking for: "+Integer.parseInt(values[1].get(i))+" but found: "+score+
                 " movesString: "+values[0].get(i));
             }
-            System.out.println("final count: "+negamaxCount+"\n");
+            double time = (System.nanoTime()-startTime)/1000000000.0;
+            System.out.println("final count: "+negamaxCount+" time elapsed: "+time+"s mean time(microseconds): "+((time/negamaxCount)*1000000)+"\n");
             negamaxCount = 0;
         }
     }
