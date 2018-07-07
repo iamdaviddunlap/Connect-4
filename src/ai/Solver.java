@@ -15,6 +15,7 @@ public class Solver {
 
     private static int negamaxCount = 0;
     private static long startTime;
+    private static final int[] searchOrder = new int[]{3,2,4,1,5,0,6}; //traverse the board from the middle outwards
 
     /**
      * Uses the passed in string to simulate moves on a game board
@@ -77,7 +78,7 @@ public class Solver {
         }
         else {
             int localMax = Integer.MIN_VALUE;
-            for(int i=0;i<LENGTH;i++) {
+            for(int i:searchOrder) {
                 if(board.checkTurn(i)) {
                     Board boardCp = new Board();
                     populateBoard(boardCp,board.getMovesString());
