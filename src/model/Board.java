@@ -1,5 +1,6 @@
 package model;
 
+import java.nio.ByteBuffer;
 import java.util.Observable;
 
 public class Board extends Observable {
@@ -342,5 +343,42 @@ public class Board extends Observable {
             output += "\n";
         }
         return output;
+    }
+
+    public byte[] encode() {
+        String val = "";
+        byte[] by = new byte[HEIGHT+1];
+        for (int col = 0; col <= HEIGHT; col++) {
+            for (int row = 0; row < LENGTH; row++) {
+                boolean terminal = false;
+                boolean thisPiece = false;
+                try {
+                    try {
+                        thisPiece = (board[row][col - 1].getPiece() != null);
+                    } catch (ArrayIndexOutOfBoundsException e) {}
+                    if(!thisPiece && col==HEIGHT) {
+                        terminal = true;
+                    }
+                    else if (!thisPiece && board[row][col].getPiece() != null) {
+                        terminal = true;
+                    }
+                } catch (ArrayIndexOutOfBoundsException e) {
+                }
+                boolean match = false;
+                if(thisPiece && board[row][col-1].getPiece().getColor().equals(activeColor)) {
+                    match = true;
+                }
+                if (match || terminal) {
+                    val += "1";
+                }
+                else {
+                    val += "0";
+                }
+            }
+            by[col] = Byte.parseByte(val, 2);
+            val = "";
+        }
+        //by[HEIGHT] = (byte)~by[HEIGHT]; //inverts the bottom row
+        return by;
     }
 }
