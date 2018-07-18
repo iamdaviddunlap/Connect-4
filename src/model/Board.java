@@ -1,16 +1,20 @@
 package model;
 
+import ai.Solver;
+
 import java.nio.ByteBuffer;
 import java.util.Observable;
 
 public class Board extends Observable {
     public static final int LENGTH = 7; //TODO change back to 7
     public static final int HEIGHT = 6; //TODO chnage back to 6
-    private Slot[][] board;
+    private Slot[][] board; //col, row (0,0) is top left, (0,5) is bottom left
     private boolean myTurn;
     private Piece.Color activeColor;
     private String gameDecision = null;
     private String movesString;
+    public byte[] bitboard;
+    public byte[] bitboardMask;
 
     public Board() {
         this.board = new Slot[LENGTH][HEIGHT];
@@ -20,8 +24,10 @@ public class Board extends Observable {
             }
         }
         this.myTurn = false;
-        activeColor = Piece.Color.RED;
+        this.activeColor = Piece.Color.RED;
         this.movesString = "";
+        this.bitboard = new byte[LENGTH];
+        this.bitboardMask = new byte[LENGTH];
     }
 
     public Piece.Color getActiveColor() {
@@ -65,12 +71,17 @@ public class Board extends Observable {
         super.notifyObservers();
     }
 
+    /**
+     * Gets the lowest position of the given row
+     * @param col the column to check
+     * @return the lowest empty row, -1 if column is full
+     */
     private int getLowest(int col) {
         int row = -1;
-        for(int i=0;i<HEIGHT;i++) {
+        for(int i=HEIGHT-1;i>=0;i--) {
             Piece piece = board[col][i].getPiece();
             if(piece == null) {
-                row = i;
+                return i;
             }
         }
         return row;
@@ -78,6 +89,8 @@ public class Board extends Observable {
 
     public void makeMove(int col) {
         board[col][getLowest(col)].setPiece(new Piece(activeColor));
+        bitboard[col] = encodeRow(col);
+        bitboardMask[col] = encodeRowMask(col);
         switchActiveColor();
         myTurn = false;
         movesString += (col+1);
@@ -94,87 +107,65 @@ public class Board extends Observable {
     }
 
     private char checkWinHorizontal() {
-        int yCounter = 0;
-        int rCounter = 0;
-        int rGreatest = 0;
-        int yGreatest = 0;
+        char colorChar = 'Y';
         for (int col=0; col < HEIGHT; col++) {
-            for (int row=0; row < LENGTH; row++) {
-                Piece piece = board[row][col].getPiece();
-                if(piece != null) {
-                    if(piece.getColor().equals(Piece.Color.YELLOW)) {
-                        yCounter++;
-                        if(rCounter > rGreatest) { rGreatest = rCounter; }
-                        rCounter = 0;
-                    }
-                    else {
-                        rCounter++;
-                        if(yCounter > yGreatest) { yGreatest = yCounter; }
-                        yCounter = 0;
+            Piece piece = board[1][col].getPiece();
+            if(piece != null) {
+                Piece.Color color = piece.getColor();
+                if(color.equals(Piece.Color.RED)) {
+                    colorChar = 'R';
+                }
+                if(board[2][col].getPiece() != null
+                        && board[3][col].getPiece() != null
+                        && board[2][col].getPiece().getColor().equals(color)
+                        && board[3][col].getPiece().getColor().equals(color)) {
+                    if(((board[0][col].getPiece() != null) && (board[0][col].getPiece().getColor().equals(color)))
+                           || ((board[4][col].getPiece() != null) && (board[4][col].getPiece().getColor().equals(color)))) {
+                        return colorChar;
                     }
                 }
-                else {
-                    if(rCounter > rGreatest) { rGreatest = rCounter; }
-                    if(yCounter > yGreatest) { yGreatest = yCounter; }
-                    rCounter = 0;
-                    yCounter = 0;
+            }
+            piece = board[5][col].getPiece();
+            if(piece != null) {
+                Piece.Color color = piece.getColor();
+                if(color.equals(Piece.Color.RED)) {
+                    colorChar = 'R';
+                }
+                if(board[4][col].getPiece() != null
+                        && board[3][col].getPiece() != null
+                        && board[4][col].getPiece().getColor().equals(color)
+                        && board[3][col].getPiece().getColor().equals(color)) {
+                    if(((board[6][col].getPiece() != null) && (board[6][col].getPiece().getColor().equals(color)))
+                            || ((board[2][col].getPiece() != null) && (board[2][col].getPiece().getColor().equals(color)))) {
+                        return colorChar;
+                    }
                 }
             }
-            if(rCounter > rGreatest) { rGreatest = rCounter; }
-            if(yCounter > yGreatest) { yGreatest = yCounter; }
-            if(yGreatest >= 4) {
-                return 'Y';
-            }
-            else if(rGreatest >= 4) {
-                return 'R';
-            }
-            yGreatest = 0;
-            rGreatest = 0;
-            yCounter = 0;
-            rCounter = 0;
         }
         return ' ';
     }
 
     private char checkWinVertical() {
-        int yCounter = 0;
-        int rCounter = 0;
-        int rGreatest = 0;
-        int yGreatest = 0;
+        char colorChar = 'Y';
         for (int row=0; row < LENGTH; row++) {
-            for (int col=HEIGHT-1; col >=0; col--) {
-                Piece piece = board[row][col].getPiece();
-                if(piece != null) {
-                    if(piece.getColor().equals(Piece.Color.YELLOW)) {
-                        yCounter++;
-                        if(rCounter > rGreatest) { rGreatest = rCounter; }
-                        rCounter = 0;
-                    }
-                    else {
-                        rCounter++;
-                        if(yCounter > yGreatest) { yGreatest = yCounter; }
-                        yCounter = 0;
-                    }
+            Piece piece0 = board[row][0].getPiece();
+            Piece piece1 = board[row][1].getPiece();
+            Piece piece2 = board[row][2].getPiece();
+            Piece piece3 = board[row][3].getPiece();
+            Piece piece4 = board[row][4].getPiece();
+            Piece piece5 = board[row][5].getPiece();
+            if(piece2 != null && piece3 != null
+                    && piece3.getColor().equals(piece2.getColor())) {
+                Piece.Color color = piece2.getColor();
+                if(color.equals(Piece.Color.RED)) {
+                    colorChar = 'R';
                 }
-                else {
-                    if(rCounter > rGreatest) { rGreatest = rCounter; }
-                    if(yCounter > yGreatest) { yGreatest = yCounter; }
-                    rCounter = 0;
-                    yCounter = 0;
+                if(((piece0 != null && piece0.getColor().equals(color)) && (piece1 != null && piece1.getColor().equals(color)))
+                        || ((piece4 != null && piece4.getColor().equals(color)) && (piece5 != null && piece5.getColor().equals(color)))
+                        || ((piece1 != null && piece1.getColor().equals(color)) && (piece4 != null && piece4.getColor().equals(color)))) {
+                    return colorChar;
                 }
             }
-            if(rCounter > rGreatest) { rGreatest = rCounter; }
-            if(yCounter > yGreatest) { yGreatest = yCounter; }
-            if(yGreatest >= 4) {
-                return 'Y';
-            }
-            else if(rGreatest >= 4) {
-                return 'R';
-            }
-            yGreatest = 0;
-            rGreatest = 0;
-            yCounter = 0;
-            rCounter = 0;
         }
         return ' ';
     }
@@ -345,40 +336,83 @@ public class Board extends Observable {
         return output;
     }
 
-    public byte[] encode() {
-        String val = "";
-        byte[] by = new byte[HEIGHT+1];
-        for (int col = 0; col <= HEIGHT; col++) {
-            for (int row = 0; row < LENGTH; row++) {
-                boolean terminal = false;
-                boolean thisPiece = false;
-                try {
-                    try {
-                        thisPiece = (board[row][col - 1].getPiece() != null);
-                    } catch (ArrayIndexOutOfBoundsException e) {}
-                    if(!thisPiece && col==HEIGHT) {
-                        terminal = true;
-                    }
-                    else if (!thisPiece && board[row][col].getPiece() != null) {
-                        terminal = true;
-                    }
-                } catch (ArrayIndexOutOfBoundsException e) {
-                }
-                boolean match = false;
-                if(thisPiece && board[row][col-1].getPiece().getColor().equals(activeColor)) {
-                    match = true;
-                }
-                if (match || terminal) {
-                    val += "1";
+    /**
+     * Encodes the mask of the board.
+     * 1 is a piece, 0 is an empty space.
+     * When XOR is applied with this and the bitboard, it gives the bitboard of the opposing player.
+     * @param col
+     * @return the byte representation of the mask of this column
+     */
+    public byte encodeRowMask(int col) {
+        int lowest = getLowest(col);
+        if(lowest == 5) {
+            return  0; //000000
+        } else if(lowest == 4) {
+            return 1; //000001
+        } else if(lowest == 3) {
+            return 3; //000011
+        } else if(lowest == 2) {
+            return 7; //000111
+        } else if(lowest == 1) {
+            return 15; //001111
+        } else if(lowest == 0) {
+            return 31; //011111
+        } else {
+            return 63; //111111
+        }
+    }
+
+    /**
+     * Encodes the given column as a byte.
+     * The following example would be encoded as:
+     *     0        1
+     * [ ] 0    [Y] 0
+     * [ ] 1    [Y] 0
+     * [Y] 0    [Y] 0
+     * [R] 1    [R] 1
+     * [Y] 0    [R] 1
+     * [R] 1    [Y] 0
+     * Red is encoded as 1, yellow as 0, and the top empty cell as 1
+     * @param col
+     * @return the byte for the bitboard representation of this column
+     */
+    public byte encodeRow(int col) {
+        byte binary = 1;
+        StringBuilder binaryS = new StringBuilder(HEIGHT+1);
+        int lowest = getLowest(col);
+        if(lowest == 5) {
+            return binary;
+        }
+        else {
+            binaryS.append("1");
+            for(int row=lowest+1;row<HEIGHT;row++) {
+                if(board[col][row].getPiece().getColor().equals(Piece.Color.RED)) {
+                    binaryS.append("1");
                 }
                 else {
-                    val += "0";
+                    binaryS.append("0");
                 }
             }
-            by[col] = Byte.parseByte(val, 2);
-            val = "";
+            binary = Byte.parseByte(binaryS.toString(), 2);
+            return binary;
         }
-        //by[HEIGHT] = (byte)~by[HEIGHT]; //inverts the bottom row
-        return by;
+    }
+
+    /**
+     * Combines the bitboard array into a long.
+     * For the yellow player, applies XOR with mask to switch the board.
+     * @return a long representing the board state
+     */
+    public long encode() {
+        long result = 0;
+        for (int i = 0; i < LENGTH; i++) {
+            result <<= 8;
+            if(activeColor.equals(Piece.Color.RED)) {
+                result |= ((bitboard[i]) & 0xFF);
+            } else {
+                result |= (((byte)(bitboard[i]) ^ bitboardMask[i]) & 0xFF);
+            }
+        }
+        return result;
     }
 }
