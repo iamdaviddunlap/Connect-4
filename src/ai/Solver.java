@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.lang.reflect.Array;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Iterator;
 
 import static model.Board.*;
 
@@ -17,6 +18,7 @@ public class Solver {
     private static int negamaxCount = 0;
     private static long startTime;
     private static final int[] searchOrder = new int[]{3,2,4,1,5,0,6}; //traverse the board from the middle outwards
+    private static TranspositionTable cache = new TranspositionTable();
 
     /**
      * Uses the passed in string to simulate moves on a game board
@@ -63,6 +65,10 @@ public class Solver {
     private static int negamax(Board board,int move,int alpha, int beta) { //TODO complete
         negamaxCount++; //keeps track of how many nodes are explored
         board.makeMove(move);
+        long encode = board.encode();
+        if(cache.containsKey(encode)) {
+            return cache.get(encode);
+        }
         char term = isTerminal(board);
         if(term != ' ') {
             if(term == 'T') {
@@ -97,6 +103,13 @@ public class Solver {
                         return beta;
                     }
                 }
+            }
+            cache.put(encode,localMax);
+            if(localMax == 2) {
+                System.out.println(board.getMovesString()+" 2");
+            }
+            if(board.getMovesString().equals("624446124615742355712477626362")) {
+                System.out.println("just before?");
             }
             return localMax;
         }
@@ -141,10 +154,6 @@ public class Solver {
 //        populateBoard(board,"1213124123151543355572244443326666667577");
 //        System.out.println(board.toString());
 //        System.out.println(board.getActiveColor());
-//        byte encode = board.encodeRow(1);
-//        byte encodeMask = board.encodeRowMask(1);
-//        byte xor = (byte)(encode ^ encodeMask);
-//        System.out.println("encodeRow: "+encode+" encodeMask: "+encodeMask+" xor: "+xor);
 //        System.out.println(board.encode());
 //        //board.switchActiveColor();
 ////        byte[] playerPos = board.bitboard;
@@ -164,6 +173,15 @@ public class Solver {
             populateBoard(tempBoard,str);
             startTime = System.nanoTime();
             int score = negamax(tempBoard,move,-Integer.MAX_VALUE,Integer.MAX_VALUE);
+
+            Iterator iterator = cache.entrySet().iterator();
+            Object lastElement = 0;
+            while (iterator.hasNext()) { lastElement = iterator.next(); }
+            if(lastElement.toString().equals("3179806099929367=2")) {
+                System.out.println("CAUGHT BEFORE");
+            }
+            System.out.println("Last element: "+lastElement);
+
             if(score == Integer.parseInt(values[1].get(i))) {
                 System.out.println("Match!");
             }

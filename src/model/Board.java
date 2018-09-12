@@ -343,7 +343,7 @@ public class Board extends Observable {
      * @param col
      * @return the byte representation of the mask of this column
      */
-    public byte encodeRowMask(int col) {
+    private byte encodeRowMask(int col) {
         int lowest = getLowest(col);
         if(lowest == 5) {
             return  0; //000000
@@ -364,7 +364,7 @@ public class Board extends Observable {
 
     /**
      * Encodes the given column as a byte.
-     * The following example would be encoded as:
+     * The following example would be encoded as (always encodes from red's perspective):
      *     0        1
      * [ ] 0    [Y] 0
      * [ ] 1    [Y] 0
@@ -376,7 +376,7 @@ public class Board extends Observable {
      * @param col
      * @return the byte for the bitboard representation of this column
      */
-    public byte encodeRow(int col) {
+    private byte encodeRow(int col) {
         byte binary = 1;
         StringBuilder binaryS = new StringBuilder(HEIGHT+1);
         int lowest = getLowest(col);
