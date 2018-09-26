@@ -26,10 +26,15 @@ public class Solver {
      * @param boardS the string of moves (1 is the leftmost, 7 is the rightmost slot)
      * @return true if it completed populating the board, false if a winner was found
      */
-    private static boolean populateBoard(Board board, String boardS) {
+    public static boolean populateBoard(Board board, String boardS) {
         for(int i=0;i<boardS.length();i++) {
-            board.makeMove(Character.getNumericValue(boardS.charAt(i))-1);
-            if(board.checkWin() != ' ') {
+            int move = Character.getNumericValue(boardS.charAt(i)) - 1;
+            if(board.checkTurn(move)) {
+                board.makeMove(move);
+                if (board.checkWin() != ' ') {
+                    return false;
+                }
+            } else {
                 return false;
             }
         }
@@ -64,10 +69,24 @@ public class Solver {
 
     private static int negamax(Board board,int move,int alpha, int beta) { //TODO complete
         negamaxCount++; //keeps track of how many nodes are explored
+
+        if(negamaxCount == 15365) {
+            System.out.println("just before?");
+        }
+
         board.makeMove(move);
+
+        if(board.getMovesString().equals("62444612461574235571247762637533565")) { //65
+            //System.out.println("breakpoint");
+        }
+
         long encode = board.encode();
-        if(cache.containsKey(encode)) {
-            return cache.get(encode);
+        if(cache.containsKey(board.toString())) {
+            if(board.getActiveColor().equals(Piece.Color.RED)) {
+                return cache.get(board.toString());
+            } else {
+                return -cache.get(board.toString());
+            }
         }
         char term = isTerminal(board);
         if(term != ' ') {
@@ -85,11 +104,24 @@ public class Solver {
         }
         else {
             int localMax = Integer.MIN_VALUE;
-            for(int i:searchOrder) {
+                for(int i:searchOrder) {
                 if(board.checkTurn(i)) {
                     Board boardCp = new Board();
                     populateBoard(boardCp,board.getMovesString());
-                    int current = -negamax(boardCp,i,-beta,-alpha);
+
+                    Board boardCp2 = new Board();
+                    populateBoard(boardCp2,board.getMovesString());
+                    boardCp2.makeMove(i);
+                    int current;
+                    if(cache.containsKey(boardCp2.toString())) {
+                        if(board.getActiveColor().equals(Piece.Color.RED)) {
+                            current = cache.get(boardCp2.toString());
+                        } else {
+                            current = -cache.get(boardCp2.toString());
+                        }
+                    } else {
+                        current = -negamax(boardCp, i, -beta, -alpha);
+                    }
                     if(current > localMax) {
                         localMax = current;
                     }
@@ -104,12 +136,14 @@ public class Solver {
                     }
                 }
             }
-            cache.put(encode,localMax);
-            if(localMax == 2) {
-                System.out.println(board.getMovesString()+" 2");
+            if(board.getActiveColor().equals(Piece.Color.YELLOW)) {
+                cache.put(board.toString(),-localMax);
+            } else {
+                cache.put(board.toString(),localMax);
             }
-            if(board.getMovesString().equals("624446124615742355712477626362")) {
-                System.out.println("just before?");
+
+            if(localMax == 2) {
+                //System.out.println(board.getMovesString()+" 2");
             }
             return localMax;
         }
@@ -180,7 +214,7 @@ public class Solver {
             if(lastElement.toString().equals("3179806099929367=2")) {
                 System.out.println("CAUGHT BEFORE");
             }
-            System.out.println("Last element: "+lastElement);
+            //System.out.println("Last element: \n"+lastElement);
 
             if(score == Integer.parseInt(values[1].get(i))) {
                 System.out.println("Match!");
