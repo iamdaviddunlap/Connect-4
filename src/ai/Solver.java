@@ -6,8 +6,6 @@ import model.Piece;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.lang.reflect.Array;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Iterator;
 
@@ -70,9 +68,7 @@ public class Solver {
     private static int negamax(Board board,int move,int alpha, int beta) { //TODO complete
         negamaxCount++; //keeps track of how many nodes are explored
 
-        if(negamaxCount == 15365) {
-            System.out.println("just before?");
-        }
+        int alphaOrg = alpha;
 
         board.makeMove(move);
 
@@ -81,13 +77,24 @@ public class Solver {
         }
 
         long encode = board.encode();
-        if(cache.containsKey(board.toString())) {
+        if(cache.containsKey(encode)) {
             if(board.getActiveColor().equals(Piece.Color.RED)) {
-                return cache.get(board.toString());
+                return cache.get(encode);
             } else {
-                return -cache.get(board.toString());
+                return -cache.get(encode);
+            }
+        } else if((board.encode() & 128L) == 128L) {
+            int value = cache.get(encode+128L);
+            if(value > alpha) {
+                alpha = value;
+            }
+        } else if((board.encode() & 32768L) == 32768L) {
+            int value = cache.get(encode+32768L);
+            if(value < beta) {
+                beta = value;
             }
         }
+
         char term = isTerminal(board);
         if(term != ' ') {
             if(term == 'T') {
@@ -104,7 +111,7 @@ public class Solver {
         }
         else {
             int localMax = Integer.MIN_VALUE;
-                for(int i:searchOrder) {
+            for(int i:searchOrder) {
                 if(board.checkTurn(i)) {
                     Board boardCp = new Board();
                     populateBoard(boardCp,board.getMovesString());
@@ -112,38 +119,29 @@ public class Solver {
                     Board boardCp2 = new Board();
                     populateBoard(boardCp2,board.getMovesString());
                     boardCp2.makeMove(i);
-                    int current;
-                    if(cache.containsKey(boardCp2.toString())) {
-                        if(board.getActiveColor().equals(Piece.Color.RED)) {
-                            current = cache.get(boardCp2.toString());
-                        } else {
-                            current = -cache.get(boardCp2.toString());
-                        }
-                    } else {
-                        current = -negamax(boardCp, i, -beta, -alpha);
-                    }
+                    int current = -negamax(boardCp, i, -beta, -alpha);
                     if(current > localMax) {
                         localMax = current;
-                    }
-                    if(current >= beta) {
-                        return current;
                     }
                     if(current > alpha) {
                         alpha = current;
                     }
                     if(alpha >= beta) {
-                        return beta;
+                        break;
                     }
                 }
             }
-            if(board.getActiveColor().equals(Piece.Color.YELLOW)) {
-                cache.put(board.toString(),-localMax);
-            } else {
-                cache.put(board.toString(),localMax);
+            long adjustedEncode = encode;
+            if(localMax <= alphaOrg) {
+                adjustedEncode += 32768L; // UPPERBOUND, stores data in extra bit of second byte
+            } else if(localMax >= beta) {
+                adjustedEncode += 128L; // LOWERBOUND, stores data in extra bit of first byte
             }
 
-            if(localMax == 2) {
-                //System.out.println(board.getMovesString()+" 2");
+            if(board.getActiveColor().equals(Piece.Color.YELLOW)) {
+                cache.put(adjustedEncode,-localMax);
+            } else {
+                cache.put(adjustedEncode,localMax);
             }
             return localMax;
         }
